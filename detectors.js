@@ -11,7 +11,7 @@ const PATTERNS = {
     desc: 'Pressure tactics to make you buy fast',
     detect() {
       const found = [];
-      const urgencyRegex = /\b(only\s+\d+\s+(left|remaining|in\s+stock)|hurry|limited\s+time|ends?\s+(soon|in|today)|offer\s+expire|last\s+chance|act\s+now|don'?t\s+miss|selling\s+fast|almost\s+gone|going\s+fast|few\s+left|low\s+stock)\b/gi;
+      const urgencyRegex = /\b(only\s+\d+\s+(left|remaining|in\s+stock|rooms?|seats?|tickets?)|hurry|limited\s+time|ends?\s+(soon|in|today|tonight)|offer\s+expir|last\s+chance|act\s+now|don'?t\s+miss|selling\s+fast|almost\s+gone|going\s+fast|few\s+(left|rooms?|seats?)|low\s+stock|filling\s+fast|high\s+demand|book\s+fast|grab\s+(it|now)|price\s+(rise|hike|change)|left\s+at\s+this\s+price|rooms?\s+left|seats?\s+left|\d+\s+rooms?\s+left|\d+\s+seats?\s+left)\b/gi;
 
       document.querySelectorAll('p,span,small,strong,b,label').forEach(el => {
         if (el.children.length > 1) return;
@@ -70,7 +70,7 @@ const PATTERNS = {
     detect() {
       const found = [];
       // Only flag SPECIFIC manipulation patterns — not generic labels like "trending/bestseller"
-      const socialRegex = /\b(\d+\s+(people|others|shoppers|users)\s+(are\s+)?(currently\s+)?(viewing|watching|looking\s+at|checking)\s+(this|it)|(\d+)\s+(bought|purchased|ordered)\s+(today|in\s+the\s+last\s+(hour|24\s+hours)|this\s+hour|recently)|\d+\s+in\s+(their\s+)?cart(s)?)\b/gi;
+      const socialRegex = /\b(\d+\s+(people|others|shoppers|users|guests?|travellers?)\s+(are\s+)?(currently\s+)?(viewing|watching|looking\s+at|checking|booking)\s+(this|it)?|(\d+)\s+(bought|purchased|ordered|booked)\s+(today|in\s+the\s+last\s+(hour|\d+\s+hours)|this\s+hour|recently|tonight)|\d+\s+in\s+(their\s+)?cart(s)?|\d+\s+people\s+booked|booked\s+\d+\s+times?)\b/gi;
 
       document.querySelectorAll('p,span,small').forEach(el => {
         // Skip elements with many children (containers/wrappers)
