@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "DarkShield — Dark Pattern Detector",
+  "version": "1.0",
+  "description": "Detects fake timers, hidden charges, fake urgency & dark patterns on any website. See the web as it really is.",
+  "author": "codingbreaker (github.com/codingbreaker)",
+  "homepage_url": "https://github.com/codingbreaker",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DarkShield — Dark Pattern Detector",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "32":  "icons/icon32.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16":  "icons/icon16.png",
+    "32":  "icons/icon32.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

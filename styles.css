@@ -1,0 +1,50 @@
+/* DarkShield — Highlight styles injected into pages */
+
+.__ds_highlight {
+  outline: 2px solid var(--ds-color, #ef4444) !important;
+  outline-offset: 2px !important;
+  background-color: color-mix(in srgb, var(--ds-color, #ef4444) 12%, transparent) !important;
+  border-radius: 4px !important;
+  position: relative !important;
+  transition: outline 0.2s, background-color 0.2s !important;
+}
+
+.__ds_highlight:hover {
+  outline-width: 3px !important;
+  background-color: color-mix(in srgb, var(--ds-color, #ef4444) 20%, transparent) !important;
+}
+
+.__ds_tooltip {
+  position: absolute !important;
+  z-index: 2147483647 !important;
+  background: #0d0d1a !important;
+  color: #e2e8f0 !important;
+  font-size: 12px !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  padding: 7px 11px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--ds-color, #ef4444) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  max-width: 260px !important;
+  white-space: normal !important;
+  pointer-events: none !important;
+  top: calc(100% + 6px) !important;
+  left: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.__ds_badge_el {
+  position: absolute !important;
+  top: -8px !important;
+  right: -8px !important;
+  background: var(--ds-color, #ef4444) !important;
+  color: #fff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 2px 5px !important;
+  border-radius: 99px !important;
+  font-family: system-ui, sans-serif !important;
+  pointer-events: none !important;
+  z-index: 2147483646 !important;
+  line-height: 1.4 !important;
+}
