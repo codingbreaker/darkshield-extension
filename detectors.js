@@ -13,10 +13,12 @@ const PATTERNS = {
       const found = [];
       const urgencyRegex = /\b(only\s+\d+\s+(left|remaining|in\s+stock)|hurry|limited\s+time|ends?\s+(soon|in|today)|offer\s+expire|last\s+chance|act\s+now|don'?t\s+miss|selling\s+fast|almost\s+gone|going\s+fast|few\s+left|low\s+stock)\b/gi;
 
-      document.querySelectorAll('p,span,div,h1,h2,h3,h4,strong,b,label').forEach(el => {
-        if (el.children.length > 3) return; // skip containers
+      document.querySelectorAll('p,span,small,strong,b,label').forEach(el => {
+        if (el.children.length > 1) return;
+        // Skip review/rating/spec containers
+        if (el.closest('[class*="rating"],[class*="review"],[class*="spec"],[class*="feature"],[class*="description"],[class*="about"]')) return;
         const text = el.innerText?.trim();
-        if (!text || text.length > 200) return;
+        if (!text || text.length > 120 || text.length < 5) return;
         if (urgencyRegex.test(text)) {
           urgencyRegex.lastIndex = 0;
           found.push({ el, reason: `"${text.slice(0, 60)}"` });
@@ -67,12 +69,16 @@ const PATTERNS = {
     desc: 'Fake viewer/buyer counts to pressure you',
     detect() {
       const found = [];
-      const socialRegex = /\b(\d+\s+(people|others|customers|shoppers|users)\s+(are\s+)?(viewing|watching|looking|checking)|(\d+)\s+(bought|purchased|ordered)\s+(today|this\s+hour|in\s+last|recently)|trending|bestseller|popular\s+choice|\d+\s+in\s+cart)\b/gi;
+      // Only flag SPECIFIC manipulation patterns — not generic labels like "trending/bestseller"
+      const socialRegex = /\b(\d+\s+(people|others|shoppers|users)\s+(are\s+)?(currently\s+)?(viewing|watching|looking\s+at|checking)\s+(this|it)|(\d+)\s+(bought|purchased|ordered)\s+(today|in\s+the\s+last\s+(hour|24\s+hours)|this\s+hour|recently)|\d+\s+in\s+(their\s+)?cart(s)?)\b/gi;
 
-      document.querySelectorAll('p,span,div,small').forEach(el => {
-        if (el.children.length > 2) return;
+      document.querySelectorAll('p,span,small').forEach(el => {
+        // Skip elements with many children (containers/wrappers)
+        if (el.children.length > 1) return;
+        // Skip review counts, ratings — those are real
+        if (el.closest('[class*="rating"],[class*="review"],[class*="star"],[class*="score"]')) return;
         const text = el.innerText?.trim();
-        if (!text || text.length > 150) return;
+        if (!text || text.length > 120 || text.length < 10) return;
         if (socialRegex.test(text)) {
           socialRegex.lastIndex = 0;
           found.push({ el, reason: `"${text.slice(0, 60)}"` });
@@ -134,10 +140,11 @@ const PATTERNS = {
       const found = [];
       const subRegex = /auto.?renew|recurring\s+(charge|billing|payment)|cancel\s+anytime|free\s+trial.{0,30}then|after\s+(trial|period).{0,30}₹|\$\d+.{0,20}per\s+(month|year|week)|billed\s+(monthly|annually|yearly)/gi;
 
-      document.querySelectorAll('p,span,div,small,label,li').forEach(el => {
-        if (el.children.length > 2) return;
+      document.querySelectorAll('p,span,small,label,li').forEach(el => {
+        if (el.children.length > 1) return;
+        if (el.closest('[class*="review"],[class*="rating"],[class*="spec"],[class*="description"]')) return;
         const text = el.innerText?.trim();
-        if (!text || text.length > 300) return;
+        if (!text || text.length > 300 || text.length < 15) return;
         if (subRegex.test(text)) {
           subRegex.lastIndex = 0;
           found.push({ el, reason: `"${text.slice(0, 80)}"` });
