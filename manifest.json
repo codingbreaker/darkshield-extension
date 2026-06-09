@@ -13,7 +13,7 @@
   "content_scripts": [
     {
       "matches": ["https://*/*", "http://*/*"],
-      "js": ["content.js"],
+      "js": ["detectors.js", "content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
     }

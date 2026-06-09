@@ -4,11 +4,8 @@
 (function () {
   'use strict';
 
-  // Inject detectors.js into page world
-  const s = document.createElement('script');
-  s.src = chrome.runtime.getURL('detectors.js');
-  s.onload = () => { s.remove(); init(); };
-  (document.head || document.documentElement).appendChild(s);
+  // detectors.js loads as content script before this file — call init directly
+  init();
 
   let _scanResults = null;
   let _enabled     = true;
@@ -28,16 +25,14 @@
     chrome.storage.sync.get('dsEnabled', ({ dsEnabled }) => {
       _enabled = dsEnabled !== false;
       scan();
-      // Re-scan after delay for dynamic/lazy-loaded content (silent — don't re-show card)
-      setTimeout(() => { if(_scanResults?.total === 0) { _cardDismissed = true; scan(); _cardDismissed = false; } }, 2500);
+      // Re-scan after delay for dynamic/lazy-loaded content
+      setTimeout(() => { if(_scanResults?.total === 0) scan(); }, 2500);
       setTimeout(() => { if(_scanResults?.total === 0) scan(); }, 5000);
     });
   }
 
   // ── SCAN ──────────────────────────────────────────────────────────
   function scan() {
-    if (typeof runAllDetectors === 'undefined') { setTimeout(scan, 300); return; }
-
     const { results, total } = runAllDetectors();
     _scanResults = { results: serializeResults(results), total, url: location.href, ts: Date.now() };
 
