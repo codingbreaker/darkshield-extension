@@ -28,8 +28,8 @@
     chrome.storage.sync.get('dsEnabled', ({ dsEnabled }) => {
       _enabled = dsEnabled !== false;
       scan();
-      // Re-scan after delay for dynamic/lazy-loaded content
-      setTimeout(() => { if(_scanResults?.total === 0) scan(); }, 2500);
+      // Re-scan after delay for dynamic/lazy-loaded content (silent — don't re-show card)
+      setTimeout(() => { if(_scanResults?.total === 0) { _cardDismissed = true; scan(); _cardDismissed = false; } }, 2500);
       setTimeout(() => { if(_scanResults?.total === 0) scan(); }, 5000);
     });
   }
