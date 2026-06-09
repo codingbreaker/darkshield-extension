@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DarkShield — Dark Pattern Detector",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Detects fake timers, hidden charges, fake urgency & dark patterns on any website. See the web as it really is.",
   "author": "codingbreaker (github.com/codingbreaker)",
   "homepage_url": "https://github.com/codingbreaker",

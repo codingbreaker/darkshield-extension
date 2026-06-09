@@ -190,7 +190,7 @@ const PATTERNS = {
     desc: 'Auto-renewal buried where you won\'t notice',
     detect() {
       const found = [];
-      const subRegex = /auto.?renew|turn\s+off.{0,20}auto|recurring\s+(charge|billing|payment)|cancel\s+anytime|cancel\s+(your\s+)?(prime|subscription|membership|plan)|free\s+trial.{0,60}(then|after|₹|\$)|after\s+(your\s+)?(trial|free\s+period|30.day).{0,60}(₹|\$|\d)|billed\s+(monthly|annually|yearly|every)|per\s+(month|year|week)\s+after|subscription\s+renew|charged\s+after|just\s+₹.{0,20}(year|month|week)|only\s+₹.{0,20}(year|month)/gi;
+      const subRegex = /auto.?renew|turn\s+off.{0,20}auto|recurring\s+(charge|billing|payment)|cancel\s+anytime|cancel\s+(your\s+)?(prime|subscription|membership|plan)|free\s+trial.{0,60}(then|after|₹|\$)|after\s+(your\s+)?(trial|free\s+period|30.day).{0,60}(₹|\$|\d)|billed\s+(monthly|annually|yearly|every)|per\s+(month|year|week)\s+after|subscription\s+renew|charged\s+after|just\s+₹.{0,20}(year|month|week)|only\s+₹.{0,20}(year|month)|automatically\s+(charged|billed|renewed)|will\s+be\s+(charged|billed)\s+after|converts?\s+to\s+(paid|premium)|unless\s+(you\s+)?(cancel|unsubscribe)|renews?\s+at\s+(₹|\$|\d)|membership\s+(fee|charge|renew)|plan\s+(auto|renew|extend)|trial\s+ends?.{0,30}(₹|\$|\d+)|introductory\s+(price|offer|rate)/gi;
 
       // Check leaf text nodes (no children) — catches inline text
       document.querySelectorAll('p,span,small,label,li').forEach(el => {
@@ -244,13 +244,14 @@ const PATTERNS = {
     desc: 'Pressure tactics to rush your decision',
     detect() {
       const found = [];
-      const urgencyRegex = /\b(only\s+\d+\s+(left|remaining|rooms?|seats?|tickets?)|hurry[!]?|limited\s+time|ends?\s+(soon|today|tonight)|last\s+chance|act\s+now|selling\s+fast|almost\s+gone|filling\s+fast|high\s+demand|book\s+fast|\d+\s+(rooms?|seats?|tickets?)\s+left|sirf\s+\d+\s+bacha?|jaldi\s+karo)\b/gi;
+      // E-commerce + Travel + Jobs + Food + News — all site types
+      const urgencyRegex = /\b(only\s+\d+\s+(left|remaining|rooms?|seats?|tickets?|spots?|openings?)|hurry[!]?|limited\s+time|ends?\s+(soon|today|tonight|midnight)|last\s+chance|act\s+now|selling\s+fast|almost\s+gone|filling\s+fast|high\s+demand|book\s+fast|\d+\s+(rooms?|seats?|tickets?|spots?)\s+left|sirf\s+\d+\s+bacha?|jaldi\s+karo|urgently\s+hiring|urgent(ly)?(\s+required)?|apply\s+(before|fast|now|immediately)|positions?\s+(filling|closing)\s+fast|deadline.{0,15}today|offer\s+expires?|deal\s+ends?|price\s+(goes?\s+up|rising|increase)|grab\s+(it\s+)?(now|fast|before)|don.t\s+miss|this\s+(won.t|will\s+not)\s+last|\d+\s+people?\s+(applied|viewed|watching|looking)\s+(in\s+the\s+)?(last\s+)?\d+\s+(hour|min|day)|be\s+the\s+first|early\s+access|flash\s+(sale|deal)|today\s+only|midnight\s+deal)\b/gi;
 
-      document.querySelectorAll('p,span,small,strong,b,label,div').forEach(el => {
+      document.querySelectorAll('p,span,small,strong,b,label,div,h1,h2,h3,h4').forEach(el => {
         if (el.children.length > 2) return;
-        if (el.closest('[class*="rating"],[class*="review"],[class*="spec"],[class*="description"],[class*="footer"],[class*="nav"],[class*="menu"]')) return;
+        if (el.closest('[class*="rating"],[class*="review"],[class*="spec"],[class*="description"],[class*="footer"],[class*="nav"],[class*="menu"],[class*="sidebar"]')) return;
         const text = el.innerText?.trim();
-        if (!text || text.length > 150 || text.length < 5) return;
+        if (!text || text.length > 200 || text.length < 5) return;
         if (urgencyRegex.test(text)) {
           urgencyRegex.lastIndex = 0;
           found.push({ el, reason: `"${text.slice(0, 70)}"` });
@@ -268,12 +269,86 @@ const PATTERNS = {
     desc: 'No/Cancel written to make you feel bad',
     detect() {
       const found = [];
-      const shameRegex = /no,?\s+(i\s+)?(don'?t|hate|never|prefer\s+not|rather\s+not|don'?t\s+want|miss\s+out)|i\s+(don'?t\s+care|hate\s+saving|prefer\s+paying\s+more|give\s+up|want\s+to\s+pay\s+more)/i;
+      const shameRegex = /no,?\s+(i\s+)?(don'?t|hate|never|prefer\s+not|rather\s+not|don'?t\s+want|miss\s+out)|i\s+(don'?t\s+care|hate\s+saving|prefer\s+paying\s+more|give\s+up|want\s+to\s+pay\s+more)|no\s+thanks?,?\s+i.{0,30}(miss|lose|pay|risk|stay\s+broke|remain)/i;
       document.querySelectorAll('a,button,span,label').forEach(el => {
         const text = el.innerText?.trim();
         if (!text || text.length > 120) return;
         if (shameRegex.test(text))
           found.push({ el, reason: `"${text.slice(0, 80)}"` });
+      });
+      return found;
+    }
+  },
+
+  // ── 10. FAKE SOCIAL PROOF ────────────────────────────────────────
+  fakeSocialProof: {
+    label: 'Fake Social Proof',
+    emoji: '👥',
+    color: '#0ea5e9',
+    desc: 'Fake viewer counts and activity to pressure you',
+    detect() {
+      const found = [];
+      // Explicit viewer/activity counts — all site types (jobs, travel, e-com, food)
+      const socialRegex = /\b(\d+\s+(people?|users?|candidates?|applicants?|others?|visitors?)\s+(are\s+)?(viewing|watching|looking\s+at|applied|applied\s+for|checking|on\s+this\s+page|in\s+your\s+area)|\d+\s+(applied|viewed|saved|shortlisted)\s+(today|in\s+\d+\s+(hour|min|day)s?|this\s+week)|currently\s+\d+\s+(people?|users?)\s+(viewing|watching|on\s+this)|\d+\s+(job\s+seekers?|recruiters?)\s+(viewed|visited|applied)|in\s+your\s+city\s+\d+\s+(applied|are\s+applying)|trending\s+in\s+your\s+area)\b/gi;
+
+      document.querySelectorAll('p,span,small,strong,b,div,li').forEach(el => {
+        if (el.children.length > 2) return;
+        if (el.closest('[class*="review"],[class*="rating"],[class*="comment"],[class*="testimonial"],[class*="nav"],[class*="footer"],[class*="header"]')) return;
+        const text = el.innerText?.trim();
+        if (!text || text.length > 150 || text.length < 8) return;
+        if (socialRegex.test(text)) {
+          socialRegex.lastIndex = 0;
+          found.push({ el, reason: `"${text.slice(0, 70)}"` });
+        }
+      });
+      return found;
+    }
+  },
+
+  // ── 11. ROACH MOTEL (hard to cancel/leave) ───────────────────────
+  roachMotel: {
+    label: 'Roach Motel',
+    emoji: '🪤',
+    color: '#84cc16',
+    desc: 'Easy to sign up, impossible to cancel',
+    detect() {
+      const found = [];
+      // Signs: cancel buried in FAQ, no cancel button visible, call-to-cancel
+      const roachRegex = /to\s+(cancel|unsubscribe|delete\s+(your\s+)?account|close\s+(your\s+)?account).{0,60}(call|email|contact|write|visit|chat\s+with|speak\s+to|reach\s+out)|cancel(l?ation)?\s+(is\s+)?(not|only)\s+(available|possible|accepted)\s+(by|via|through)\s+(phone|call|email)|cannot\s+(cancel|unsubscribe)\s+online|cancell?ation\s+fee|early\s+(exit|termination)\s+(fee|charge|penalty)/gi;
+
+      document.querySelectorAll('p,span,small,li,div').forEach(el => {
+        if (el.children.length > 2) return;
+        if (el.closest('[class*="nav"],[class*="header"],[class*="footer"],[class*="menu"]')) return;
+        const text = el.innerText?.trim();
+        if (!text || text.length > 400 || text.length < 15) return;
+        if (roachRegex.test(text)) {
+          roachRegex.lastIndex = 0;
+          found.push({ el, reason: `"${text.slice(0, 80)}"` });
+        }
+      });
+      return found;
+    }
+  },
+
+  // ── 12. HIDDEN FEES (price changes at checkout) ──────────────────
+  hiddenFees: {
+    label: 'Hidden Fees',
+    emoji: '💰',
+    color: '#f43f5e',
+    desc: 'Extra charges added silently at checkout',
+    detect() {
+      const found = [];
+      const feeRegex = /\b(convenience\s+fee|platform\s+fee|processing\s+fee|service\s+charge|handling\s+(fee|charge)|gst\s+extra|taxes?\s+(extra|not\s+included|applicable)|charges?\s+extra|additional\s+(fee|charge|tax)|booking\s+fee|gateway\s+fee|surcharge|resort\s+fee|facility\s+fee|environmental\s+levy)\b/gi;
+
+      document.querySelectorAll('p,span,small,li,div,td,th').forEach(el => {
+        if (el.children.length > 2) return;
+        if (el.closest('[class*="nav"],[class*="header"],[class*="footer"],[class*="menu"]')) return;
+        const text = el.innerText?.trim();
+        if (!text || text.length > 200 || text.length < 5) return;
+        if (feeRegex.test(text)) {
+          feeRegex.lastIndex = 0;
+          found.push({ el, reason: `"${text.slice(0, 70)}"` });
+        }
       });
       return found;
     }
