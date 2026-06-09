@@ -249,9 +249,11 @@ const PATTERNS = {
 
       document.querySelectorAll('p,span,small,strong,b,label,div,h1,h2,h3,h4').forEach(el => {
         if (el.children.length > 2) return;
-        if (el.closest('[class*="rating"],[class*="review"],[class*="spec"],[class*="description"],[class*="footer"],[class*="nav"],[class*="menu"],[class*="sidebar"]')) return;
+        if (el.closest('[class*="rating"],[class*="review"],[class*="spec"],[class*="description"],[class*="footer"],[class*="nav"],[class*="menu"],[class*="sidebar"],[class*="job-title"],[class*="jobtitle"],[class*="title"],[class*="listing"],[class*="card-title"]')) return;
         const text = el.innerText?.trim();
         if (!text || text.length > 200 || text.length < 5) return;
+        // Skip if it's a job/product title (contains company name patterns or is heading inside a card)
+        if (/urgent\s+(hiring|opening|requirement|vacancy)/i.test(text) && text.length > 40) return;
         if (urgencyRegex.test(text)) {
           urgencyRegex.lastIndex = 0;
           found.push({ el, reason: `"${text.slice(0, 70)}"` });
@@ -371,9 +373,15 @@ function runAllDetectors() {
 }
 
 function deduplicateEls(arr) {
-  const seen = new WeakSet();
-  return arr.filter(({ el }) => {
-    if (!el || seen.has(el)) return false;
-    seen.add(el); return true;
+  const seenEls  = new WeakSet();
+  const seenText = new Set();
+  return arr.filter(({ el, reason }) => {
+    if (!el || seenEls.has(el)) return false;
+    // Deduplicate by normalized text — same text in nested elements = one result
+    const text = (el.innerText?.trim() || '').slice(0, 100).toLowerCase().replace(/\s+/g, ' ');
+    if (text.length > 5 && seenText.has(text)) return false;
+    seenEls.add(el);
+    if (text.length > 5) seenText.add(text);
+    return true;
   });
 }
