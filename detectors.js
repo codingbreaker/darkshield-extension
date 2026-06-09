@@ -195,7 +195,7 @@ const PATTERNS = {
       // Check leaf text nodes (no children) — catches inline text
       document.querySelectorAll('p,span,small,label,li').forEach(el => {
         if (el.children.length > 1) return;
-        if (el.closest('[class*="review"],[class*="rating"],[class*="nav"],[class*="header"],[class*="footer"]')) return;
+        if (el.closest('[class*="review"],[class*="rating"],[class*="nav"],[class*="header"],[class*="footer"],[class*="faq"],[class*="help"],[class*="accordion"],[class*="support"],[class*="question"],[class*="answer"]')) return;
         const text = el.innerText?.trim();
         if (!text || text.length > 500 || text.length < 12) return;
         if (subRegex.test(text)) { subRegex.lastIndex = 0; found.push({ el, reason: `"${text.slice(0, 80)}"` }); }
@@ -204,7 +204,10 @@ const PATTERNS = {
       // Also check larger containers — catches Amazon-style blocks
       document.querySelectorAll('div,section').forEach(el => {
         if (el.children.length > 6) return; // skip big wrappers
-        if (el.closest('[class*="nav"],[class*="header"],[class*="footer"],[class*="review"]')) return;
+        if (el.closest('[class*="nav"],[class*="header"],[class*="footer"],[class*="review"],[class*="faq"],[class*="help"],[class*="accordion"],[class*="support"],[class*="question"],[class*="answer"]')) return;
+        // Skip if text looks like a Q&A (starts with "Can I", "How", "What", "Yes,", "No,")
+        const t0 = el.innerText?.trim() || '';
+        if (/^(can\s+i|how\s+(do|can|to)|what\s+(is|are|happens)|yes,|no,\s+you)/i.test(t0)) return;
         const text = el.innerText?.trim();
         if (!text || text.length > 300 || text.length < 20) return;
         if (subRegex.test(text)) { subRegex.lastIndex = 0; found.push({ el, reason: `"${text.slice(0, 80)}"` }); }
@@ -252,8 +255,11 @@ const PATTERNS = {
         if (el.closest('[class*="rating"],[class*="review"],[class*="spec"],[class*="description"],[class*="footer"],[class*="nav"],[class*="menu"],[class*="sidebar"],[class*="job-title"],[class*="jobtitle"],[class*="title"],[class*="listing"],[class*="card-title"]')) return;
         const text = el.innerText?.trim();
         if (!text || text.length > 200 || text.length < 5) return;
-        // Skip if it's a job/product title (contains company name patterns or is heading inside a card)
+        // Skip job titles and benefit/feature descriptions
         if (/urgent\s+(hiring|opening|requirement|vacancy)/i.test(text) && text.length > 40) return;
+        // Skip benefit lists — "early access to X", "access to X events/deals"
+        if (/^early\s+access\s+to\b/i.test(text)) return;
+        if (/\baccess\s+to\s+(exclusive|shopping|prime|special|early)/i.test(text) && !/only\s+\d+/i.test(text)) return;
         if (urgencyRegex.test(text)) {
           urgencyRegex.lastIndex = 0;
           found.push({ el, reason: `"${text.slice(0, 70)}"` });
