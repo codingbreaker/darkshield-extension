@@ -190,7 +190,7 @@ const PATTERNS = {
     desc: 'Auto-renewal buried where you won\'t notice',
     detect() {
       const found = [];
-      const subRegex = /auto.?renew|recurring\s+(charge|billing|payment)|cancel\s+anytime|free\s+trial.{0,60}(then|after|\₹|\$)|after\s+(your\s+)?(trial|free\s+period|30.day).{0,60}(₹|\$|\d)|billed\s+(monthly|annually|yearly|every)|per\s+(month|year|week)\s+after|subscription\s+renew|charged\s+after|just\s+₹.{0,20}(year|month|week)|only\s+₹.{0,20}(year|month)/gi;
+      const subRegex = /auto.?renew|turn\s+off.{0,20}auto|recurring\s+(charge|billing|payment)|cancel\s+anytime|cancel\s+(your\s+)?(prime|subscription|membership|plan)|free\s+trial.{0,60}(then|after|₹|\$)|after\s+(your\s+)?(trial|free\s+period|30.day).{0,60}(₹|\$|\d)|billed\s+(monthly|annually|yearly|every)|per\s+(month|year|week)\s+after|subscription\s+renew|charged\s+after|just\s+₹.{0,20}(year|month|week)|only\s+₹.{0,20}(year|month)/gi;
 
       // Check leaf text nodes (no children) — catches inline text
       document.querySelectorAll('p,span,small,label,li').forEach(el => {
