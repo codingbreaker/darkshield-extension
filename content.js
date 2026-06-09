@@ -44,7 +44,7 @@
     chrome.runtime.sendMessage({ action: 'setBadge', count: total });
 
     if (_enabled) showHighlights(results);
-    if (total > 0 && !_cardDismissed) showFloatingCard(total, results);
+    if (!_cardDismissed) showFloatingCard(total, results);
   }
 
   function serializeResults(results) {
@@ -63,13 +63,14 @@
   function showFloatingCard(total, results) {
     removeFloatingCard();
 
-    const topPatterns = Object.values(results)
+    const isClean    = total === 0;
+    const topPatterns = isClean ? [] : Object.values(results)
       .filter(p => p.found?.length > 0)
       .sort((a,b) => b.found.length - a.found.length)
       .slice(0, 3);
 
-    const riskColor = total > 5 ? '#ef4444' : total > 2 ? '#f97316' : '#f59e0b';
-    const riskText  = total > 5 ? '🔴 High Risk' : total > 2 ? '🟡 Suspicious' : '🟡 Found';
+    const riskColor = isClean ? '#4ade80' : total > 5 ? '#ef4444' : total > 2 ? '#f97316' : '#f59e0b';
+    const riskText  = isClean ? '✅ Clean Page' : total > 5 ? '🔴 High Risk' : total > 2 ? '🟡 Suspicious' : '🟡 Found';
 
     const card = document.createElement('div');
     card.id = '__ds_card';
@@ -78,7 +79,7 @@
       bottom:         '20px',
       right:          '16px',
       zIndex:         '2147483647',
-      background:     '#0d0d1aee',
+      background:     '#0d0d1af0',
       border:         `1px solid ${riskColor}55`,
       backdropFilter: 'blur(12px)',
       borderRadius:   '14px',
@@ -88,17 +89,18 @@
       fontFamily:     'system-ui,-apple-system,sans-serif',
       fontSize:       '13px',
       color:          '#e2e8f0',
-      transition:     'transform .2s, opacity .2s',
+      transition:     'opacity .2s',
+      userSelect:     'none',
     });
 
     card.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div id="__ds_drag_handle" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${isClean ? '0' : '10px'};cursor:grab">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:20px">🛡️</span>
           <div>
             <div style="font-size:12px;font-weight:800;color:#fca5a5">DarkShield</div>
             <div style="font-size:10px;color:#6b7280;margin-top:1px">
-              <span style="color:${riskColor};font-weight:700">${total} patterns</span> · ${riskText}
+              <span style="color:${riskColor};font-weight:700">${isClean ? 'No dark patterns' : total + ' patterns'}</span> · ${riskText}
             </div>
           </div>
         </div>
@@ -107,31 +109,57 @@
           display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:11px">
-        ${topPatterns.map(p => `
-          <div style="display:flex;align-items:center;justify-content:space-between;
-            background:#111827;border-radius:7px;padding:6px 9px;border:1px solid ${p.color}33">
-            <span style="font-size:12px">${p.emoji} <span style="color:#e2e8f0;font-weight:600">${p.label}</span></span>
-            <span style="background:${p.color}22;color:${p.color};font-size:10px;font-weight:700;
-              padding:2px 7px;border-radius:99px;border:1px solid ${p.color}44">${p.found.length}</span>
-          </div>
-        `).join('')}
-      </div>
-
-      <div style="display:flex;gap:6px">
-        <button id="__ds_scroll" style="flex:1;background:linear-gradient(135deg,${riskColor},${riskColor}99);
-          color:#fff;border:none;border-radius:8px;padding:8px;font-size:11px;font-weight:700;
-          cursor:pointer;font-family:inherit">🔍 Show me</button>
-        <button id="__ds_dismiss" style="background:#111827;border:1px solid #1f2937;color:#6b7280;
-          border-radius:8px;padding:8px 10px;font-size:11px;cursor:pointer;font-family:inherit">Ignore</button>
-      </div>
+      ${isClean ? `
+        <div style="margin-top:10px;padding:10px;background:#14532d22;border-radius:9px;border:1px solid #4ade8033;text-align:center">
+          <div style="font-size:11px;color:#4ade80">This page looks safe 👍</div>
+          <div style="font-size:10px;color:#374151;margin-top:3px">No manipulative patterns detected</div>
+        </div>
+      ` : `
+        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:11px">
+          ${topPatterns.map(p => `
+            <div style="display:flex;align-items:center;justify-content:space-between;
+              background:#111827;border-radius:7px;padding:6px 9px;border:1px solid ${p.color}33">
+              <span style="font-size:12px">${p.emoji} <span style="color:#e2e8f0;font-weight:600">${p.label}</span></span>
+              <span style="background:${p.color}22;color:${p.color};font-size:10px;font-weight:700;
+                padding:2px 7px;border-radius:99px;border:1px solid ${p.color}44">${p.found.length}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div style="display:flex;gap:6px">
+          <button id="__ds_scroll" style="flex:1;background:linear-gradient(135deg,${riskColor},${riskColor}99);
+            color:#fff;border:none;border-radius:8px;padding:8px;font-size:11px;font-weight:700;
+            cursor:pointer;font-family:inherit">🔍 Show me</button>
+          <button id="__ds_dismiss" style="background:#111827;border:1px solid #1f2937;color:#6b7280;
+            border-radius:8px;padding:8px 10px;font-size:11px;cursor:pointer;font-family:inherit">Ignore</button>
+        </div>
+      `}
     `;
 
     document.body.appendChild(card);
 
-    // Hover effect
-    card.onmouseenter = () => { card.style.transform = 'translateY(-2px)'; };
-    card.onmouseleave = () => { card.style.transform = ''; };
+    // ── Draggable (drag handle = header row) ──────────────────────
+    let dragging = false, ox = 0, oy = 0;
+    const handle = document.getElementById('__ds_drag_handle');
+    handle.addEventListener('mousedown', e => {
+      if (e.target.id === '__ds_close') return;
+      dragging = true;
+      ox = e.clientX - card.getBoundingClientRect().left;
+      oy = e.clientY - card.getBoundingClientRect().top;
+      handle.style.cursor = 'grabbing';
+      card.style.transition = 'none';
+      card.style.bottom = 'auto';
+      card.style.right  = 'auto';
+    });
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      card.style.left = (e.clientX - ox) + 'px';
+      card.style.top  = (e.clientY - oy) + 'px';
+    });
+    document.addEventListener('mouseup', () => {
+      dragging = false;
+      handle.style.cursor = 'grab';
+      card.style.transition = 'opacity .2s';
+    });
 
     // Close
     document.getElementById('__ds_close').onclick = () => {
@@ -140,40 +168,40 @@
       setTimeout(() => card.remove(), 200);
     };
 
-    // Ignore
-    document.getElementById('__ds_dismiss').onclick = () => {
-      _cardDismissed = true;
-      card.style.opacity = '0';
-      setTimeout(() => card.remove(), 200);
-    };
+    if (!isClean) {
+      // Ignore
+      document.getElementById('__ds_dismiss').onclick = () => {
+        _cardDismissed = true;
+        card.style.opacity = '0';
+        setTimeout(() => card.remove(), 200);
+      };
 
-    // Show me — scroll to first detected element
-    document.getElementById('__ds_scroll').onclick = () => {
-      const firstKey = Object.keys(results).find(k => results[k].found?.length > 0);
-      if (firstKey) scrollToPattern(firstKey);
-      card.style.opacity = '0';
-      setTimeout(() => card.remove(), 200);
-    };
+      // Show me — scroll to first detected element
+      document.getElementById('__ds_scroll').onclick = () => {
+        const firstKey = Object.keys(results).find(k => results[k].found?.length > 0);
+        if (firstKey) scrollToPattern(firstKey);
+        card.style.opacity = '0';
+        setTimeout(() => card.remove(), 200);
+      };
+    }
 
-    // Auto-minimize after 6 seconds
+    // Auto-minimize after 5s (clean) or 8s (patterns found)
+    const miniDelay = isClean ? 5000 : 8000;
     setTimeout(() => {
       if (!document.body.contains(card)) return;
       card.style.opacity = '0';
       setTimeout(() => {
         if (!document.body.contains(card)) return;
-        // Shrink to mini pill
         card.innerHTML = `
           <div style="display:flex;align-items:center;gap:7px;cursor:pointer" id="__ds_expand">
             <span style="font-size:16px">🛡️</span>
-            <span style="font-size:11px;font-weight:700;color:${riskColor}">${total} dark patterns</span>
-            <span style="font-size:10px;color:#4b5563">tap to see</span>
+            <span style="font-size:11px;font-weight:700;color:${riskColor}">${isClean ? '✅ Safe' : total + ' patterns'}</span>
           </div>
         `;
         Object.assign(card.style, {
-          padding:  '9px 13px',
+          padding:  '8px 12px',
           width:    'auto',
           opacity:  '1',
-          cursor:   'pointer',
         });
         document.getElementById('__ds_expand').onclick = () => {
           _cardDismissed = false;
@@ -181,7 +209,7 @@
           showFloatingCard(total, results);
         };
       }, 200);
-    }, 6000);
+    }, miniDelay);
   }
 
   // ── HIGHLIGHTS ────────────────────────────────────────────────────
