@@ -171,12 +171,28 @@
         setTimeout(() => card.remove(), 200);
       };
 
-      // Show me — scroll to first detected element
+      // Show me — scroll to first detected element, then minimize to pill
       document.getElementById('__ds_scroll').onclick = () => {
         const firstKey = Object.keys(results).find(k => results[k].found?.length > 0);
         if (firstKey) scrollToPattern(firstKey);
+        // Minimize to pill instead of removing
         card.style.opacity = '0';
-        setTimeout(() => card.remove(), 200);
+        setTimeout(() => {
+          if (!document.body.contains(card)) return;
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:7px;cursor:pointer" id="__ds_expand">
+              <span style="font-size:16px">🛡️</span>
+              <span style="font-size:11px;font-weight:700;color:${riskColor}">${total} patterns</span>
+              <span style="font-size:10px;color:#4b5563">tap</span>
+            </div>
+          `;
+          Object.assign(card.style, { padding:'8px 12px', width:'auto', opacity:'1' });
+          document.getElementById('__ds_expand').onclick = () => {
+            _cardDismissed = false;
+            card.remove();
+            showFloatingCard(total, results);
+          };
+        }, 200);
       };
     }
 
