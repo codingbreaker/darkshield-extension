@@ -190,18 +190,26 @@ const PATTERNS = {
     desc: 'Auto-renewal buried where you won\'t notice',
     detect() {
       const found = [];
-      const subRegex = /auto.?renew|recurring\s+(charge|billing|payment)|cancel\s+anytime|free\s+trial.{0,40}then|after\s+(trial|period).{0,40}(₹|\$|\d)|billed\s+(monthly|annually|yearly|every\s+\w+)|per\s+(month|year|week)\s+after|subscription\s+renew|charged\s+after/gi;
+      const subRegex = /auto.?renew|recurring\s+(charge|billing|payment)|cancel\s+anytime|free\s+trial.{0,60}(then|after|\₹|\$)|after\s+(your\s+)?(trial|free\s+period|30.day).{0,60}(₹|\$|\d)|billed\s+(monthly|annually|yearly|every)|per\s+(month|year|week)\s+after|subscription\s+renew|charged\s+after|just\s+₹.{0,20}(year|month|week)|only\s+₹.{0,20}(year|month)/gi;
 
-      document.querySelectorAll('p,span,small,label,li,div').forEach(el => {
+      // Check leaf text nodes (no children) — catches inline text
+      document.querySelectorAll('p,span,small,label,li').forEach(el => {
         if (el.children.length > 1) return;
-        if (el.closest('[class*="review"],[class*="rating"],[class*="nav"],[class*="menu"],[class*="header"]')) return;
+        if (el.closest('[class*="review"],[class*="rating"],[class*="nav"],[class*="header"],[class*="footer"]')) return;
         const text = el.innerText?.trim();
-        if (!text || text.length > 400 || text.length < 15) return;
-        if (subRegex.test(text)) {
-          subRegex.lastIndex = 0;
-          found.push({ el, reason: `"${text.slice(0, 80)}"` });
-        }
+        if (!text || text.length > 500 || text.length < 12) return;
+        if (subRegex.test(text)) { subRegex.lastIndex = 0; found.push({ el, reason: `"${text.slice(0, 80)}"` }); }
       });
+
+      // Also check larger containers — catches Amazon-style blocks
+      document.querySelectorAll('div,section').forEach(el => {
+        if (el.children.length > 6) return; // skip big wrappers
+        if (el.closest('[class*="nav"],[class*="header"],[class*="footer"],[class*="review"]')) return;
+        const text = el.innerText?.trim();
+        if (!text || text.length > 300 || text.length < 20) return;
+        if (subRegex.test(text)) { subRegex.lastIndex = 0; found.push({ el, reason: `"${text.slice(0, 80)}"` }); }
+      });
+
       return found;
     }
   },
@@ -221,7 +229,7 @@ const PATTERNS = {
         const style = window.getComputedStyle(el);
         const size  = parseFloat(style.fontSize);
         const text  = el.innerText?.trim();
-        if (size < 11 && size > 0 && text?.length > 20 && important.test(text))
+        if (size < 13 && size > 0 && text?.length > 20 && important.test(text))
           found.push({ el, reason: `${size}px text: "${text.slice(0, 60)}"` });
       });
       return found;
