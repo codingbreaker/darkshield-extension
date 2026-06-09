@@ -13,34 +13,43 @@ Every day, websites manipulate you into:
 - Paying extra with **pre-checked insurance/donation boxes**
 - Forgetting to cancel with **hidden auto-renewal text**
 - Feeling bad with **"No thanks, I hate saving money"** buttons
+- Getting hit with **surprise fees at checkout**
 
-**DarkShield catches all of this — automatically.**
+**DarkShield catches all of this — automatically, on every website.**
 
 ---
 
-## What It Detects
+## What It Detects (12 Pattern Types)
 
 | Pattern | Example | Sites |
 |---------|---------|-------|
-| ⏰ **Fake Urgency** | "Hurry! Only 3 left!", "Limited time offer" | Amazon, Flipkart, Myntra |
+| ⏰ **Fake Urgency** | "Hurry! Only 3 left!", "Urgently Hiring" | Amazon, Flipkart, Naukri |
 | 🕐 **Fake Countdown** | Timer that resets on page reload | Swiggy, Zomato, travel sites |
-| 👥 **Fake Social Proof** | "12 people viewing this right now" | Hotels, e-commerce |
+| 💸 **Fake Discount** | 80% off — but MRP was inflated | Ajio, Myntra, Meesho |
+| 👥 **Fake Social Proof** | "12 people viewing this right now" | Booking.com, hotels |
 | ☑️ **Pre-Checked Boxes** | Insurance, donation added by default | Amazon, MakeMyTrip |
 | 😔 **Confirm Shaming** | "No thanks, I prefer paying more" | Subscription sites |
-| 🔄 **Hidden Subscription** | Free trial → auto-charge buried in fine print | Apps, streaming |
+| 🔄 **Hidden Subscription** | Free trial → auto-charge in fine print | Netflix, apps, streaming |
 | 🔍 **Fine Print** | Important charges in tiny unreadable text | Any checkout page |
+| 🚫 **Forced Overlay** | Popup covers 40%+ screen, no close button | News sites, e-commerce |
+| 🎯 **Misdirection** | Accept button huge, decline button tiny | Cookie banners, popups |
+| 🪤 **Roach Motel** | Easy to subscribe, impossible to cancel | SaaS, gyms, telecom |
+| 💰 **Hidden Fees** | Convenience fee surprise at checkout | Zomato, travel, ticketing |
 
 ---
 
 ## Features
 
-- ✅ **Works on ALL websites** — not just specific sites
-- ✅ **Red highlight** on detected elements — hover to see why it's flagged
-- ✅ **Score card** — total count + risk level (Clean / Suspicious / High Risk)
-- ✅ **Badge on icon** — see count at a glance without opening popup
+- ✅ **Auto floating card** — appears on every page load, no click needed
+- ✅ **Works on ALL websites** — jobs, travel, shopping, streaming, news
+- ✅ **Colored highlights** on detected elements — hover to see exactly why
+- ✅ **Score card** — Clean / Suspicious / High Risk rating
+- ✅ **Badge on icon** — see count at a glance
+- ✅ **Draggable card** — move it anywhere, won't block content
 - ✅ **Toggle highlights** on/off without losing scan results
-- ✅ **Rescan button** — for single-page apps that load content dynamically
-- ✅ **Zero tracking** — no data sent anywhere, 100% local
+- ✅ **Rescan button** — for SPAs that load content dynamically
+- ✅ **SPA navigation** — auto re-scans on URL change (React, Next.js, etc.)
+- ✅ **Zero tracking** — 100% local, no data sent anywhere
 
 ---
 
@@ -51,7 +60,7 @@ Every day, websites manipulate you into:
 3. Enable **Developer mode** (top-right toggle)
 4. Click **Load unpacked**
 5. Select the `darkshield-extension` folder
-6. Done — visit any shopping site and watch the badge light up
+6. Done — visit any website and the card appears automatically
 
 ---
 
@@ -60,27 +69,18 @@ Every day, websites manipulate you into:
 ```
 Page loads
     ↓
-DarkShield runs 7 detectors on the DOM
+DarkShield runs 12 detectors on the DOM
     ↓
-Suspicious elements get red highlight + tooltip
+Floating card appears — Clean ✅ or patterns found ⚠️
+    ↓
+Suspicious elements get colored highlight + tooltip on hover
     ↓
 Badge shows total count (🔴 red = high risk)
     ↓
-Click extension icon → full breakdown
+Click "Show me" → jumps to flagged element
     ↓
-Click any pattern → jumps to that element on page
+Card minimizes to pill — tap to expand again
 ```
-
----
-
-## Tech Stack
-
-- **Manifest V3** Chrome Extension
-- **Content Scripts** — run on every page
-- **MutationObserver** — detects SPA navigation (no page reload needed)
-- **Regex + DOM analysis** — 7 independent detection strategies
-- **Zero dependencies** — pure vanilla JS, no npm, no frameworks
-- **Background Service Worker** — updates badge count per tab
 
 ---
 
@@ -88,11 +88,36 @@ Click any pattern → jumps to that element on page
 
 | Site | What You'll Find |
 |------|-----------------|
-| Amazon.in | Fake urgency, countdown timers, pre-checked add-ons |
-| Flipkart | "Only X left", social proof, fine print |
-| Swiggy / Zomato | Countdown timers, hidden charges |
-| MakeMyTrip | Pre-checked insurance, urgency text |
-| Any subscription site | Hidden auto-renewal, confirm shaming |
+| `amazon.in/prime` | Countdown timer, fine print, hidden subscription |
+| `makemytrip.com` | Pre-checked insurance, urgency, hidden fees |
+| `booking.com` | Fake social proof, "X rooms left" urgency |
+| `ajio.com/sale` | Inflated MRP, fake discounts |
+| `naukri.com` | Urgency in job listings |
+| Any subscription site | Hidden auto-renewal, confirm shaming, roach motel |
+
+---
+
+## Tech Stack
+
+- **Manifest V3** Chrome Extension
+- **Content Scripts** (Isolated World) — chrome API access
+- **Detectors** — 12 independent pattern detection strategies
+- **MutationObserver** — SPA navigation detection (no reload needed)
+- **Regex + DOM + Visual analysis** — behavior-based, not just text matching
+- **Zero dependencies** — pure vanilla JS, no npm, no frameworks
+- **Background Service Worker** — updates badge count per tab
+
+---
+
+## Detection Methods
+
+DarkShield uses **behavior-based** detection, not just keyword matching:
+
+- **Timer Reset Detection** — stores timer values in sessionStorage, flags if value increases on reload
+- **Visual Size Analysis** — compares accept vs decline button dimensions
+- **Price Math** — calculates actual % discount, flags >75% as likely inflated MRP
+- **Viewport Coverage** — detects overlays covering >40% of screen
+- **Text + Context** — ignores FAQ answers, job titles, benefit descriptions (reduces false positives)
 
 ---
 
@@ -103,6 +128,7 @@ Click any pattern → jumps to that element on page
 - ❌ No account required
 - ✅ Everything runs locally in your browser
 - ✅ No tracking, no analytics
+- ✅ Open source — read every line
 
 ---
 
